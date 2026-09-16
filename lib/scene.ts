@@ -38,6 +38,7 @@ export function createScene(
   let line: L.Polyline | null = null;
   let ringMax: L.Polygon | null = null;
   let ringMin: L.Polygon | null = null;
+  let ringLow: L.Polygon | null = null;
   let ringMaxT: L.Polygon | null = null;
   let ringMinT: L.Polygon | null = null;
 
@@ -47,6 +48,12 @@ export function createScene(
   });
   const maxU = () => (weapon ? (weapon.maxRangeKm * 1000) / metersPerUnit : 0);
   const minU = () => (weapon ? (weapon.minRangeKm * 1000) / metersPerUnit : 0);
+  // minimální dostřel LOW trajektorie (jen artillery s arc) — pod ním jen HIGH
+  const lowMinU = () => {
+    const t = weapon?.ballistics.low;
+    if (!weapon?.ballistics.high || !t || !t.length) return 0;
+    return Math.min(...t.map((r) => r[0])) / metersPerUnit;
+  };
 
   function ringLatLngs(center: Point, rUnits: number, n = 96) {
     const pts: L.LatLng[] = [];
@@ -127,7 +134,7 @@ export function createScene(
   function draw() {
     layer.clearLayers();
     originMarker = targetMarker = null;
-    line = ringMin = ringMax = ringMinT = ringMaxT = null;
+    line = ringMin = ringMax = ringLow = ringMinT = ringMaxT = null;
 
     if (origin && weapon) {
       ringMax = L.polygon(ringLatLngs(origin, maxU()), {
@@ -142,6 +149,16 @@ export function createScene(
           color: "#f0607a",
           weight: 1.5,
           dashArray: "6 6",
+          interactive: false,
+          fill: false,
+        }).addTo(layer);
+      // velmi slabý náznak LOW prstence (artillery) — hranice LOW trajektorie
+      if (lowMinU() > 0)
+        ringLow = L.polygon(ringLatLngs(origin, lowMinU()), {
+          color: "#e0a92e",
+          weight: 1,
+          opacity: 0.22,
+          dashArray: "2 9",
           interactive: false,
           fill: false,
         }).addTo(layer);
@@ -220,6 +237,7 @@ export function createScene(
   function liveUpdate() {
     if (origin && ringMax) ringMax.setLatLngs(ringLatLngs(origin, maxU()));
     if (origin && ringMin) ringMin.setLatLngs(ringLatLngs(origin, minU()));
+    if (origin && ringLow) ringLow.setLatLngs(ringLatLngs(origin, lowMinU()));
     if (target && ringMaxT) ringMaxT.setLatLngs(ringLatLngs(target, maxU()));
     if (target && ringMinT) ringMinT.setLatLngs(ringLatLngs(target, minU()));
     if (origin && target && line)
