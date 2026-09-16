@@ -181,34 +181,37 @@ export function FireControl() {
         </div>
       </div>
 
-      {/* ---- HUD: velké odečty ---- */}
-      <div className="pointer-events-none absolute bottom-4 left-4 z-[500] w-72 rounded-xl border bg-card/85 p-4 backdrop-blur">
-        <Readout label="AZIMUTH" value={sol ? `${sol.azimuth.toFixed(1)}°` : "—"} big />
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <Readout label="MIL" value={milText} />
+      {/* ---- HUD + cíl X/Y + kopírování (jedno okno vlevo dole) ---- */}
+      <div className="absolute bottom-4 left-4 z-[500] w-72 rounded-xl border bg-card/85 p-4 backdrop-blur">
+        <div className="pointer-events-none">
           <Readout
-            label="DISTANCE"
-            value={sol ? `${Math.round(sol.distanceMeters)} m` : "—"}
+            label="AZIMUTH"
+            value={sol ? `${sol.azimuth.toFixed(1)}°` : "—"}
+            big
           />
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <Readout label="MIL" value={milText} />
+            <Readout
+              label="DISTANCE"
+              value={sol ? `${Math.round(sol.distanceMeters)} m` : "—"}
+            />
+          </div>
+          <div
+            className={cn(
+              "mt-3 text-xs",
+              !sol
+                ? "text-muted-foreground"
+                : sol.inRange
+                ? "text-emerald-400"
+                : "text-rose-400"
+            )}
+          >
+            {statusText}
+          </div>
         </div>
-        <div
-          className={cn(
-            "mt-3 text-xs",
-            !sol
-              ? "text-muted-foreground"
-              : sol.inRange
-              ? "text-emerald-400"
-              : "text-rose-400"
-          )}
-        >
-          {statusText}
-        </div>
-      </div>
 
-      {/* ---- panel: cíl X/Y + kopírování (vždy viditelný) ---- */}
-      <div className="absolute right-0 top-0 z-[600] flex h-full w-80 max-w-[85vw] flex-col gap-4 overflow-y-auto border-l bg-card/95 p-4 pt-16 backdrop-blur">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-rose-400">
+        <div className="mt-4 border-t pt-3">
+          <div className="flex items-center gap-2 text-[10px] font-semibold tracking-wider text-rose-400">
             <span className="inline-block size-2 rounded-full bg-rose-500" />
             TARGET (X / Y)
           </div>
@@ -228,17 +231,16 @@ export function FireControl() {
               placeholder="Y"
             />
           </div>
+          <Button
+            variant="outline"
+            className="mt-2 w-full"
+            onClick={copyResult}
+            disabled={!sol}
+          >
+            {copied ? <Check /> : <Copy />}
+            {copied ? "Copied" : "Copy solution"}
+          </Button>
         </div>
-
-        <Button variant="outline" onClick={copyResult} disabled={!sol}>
-          {copied ? <Check /> : <Copy />}
-          {copied ? "Copied" : "Copy solution"}
-        </Button>
-
-        <p className="mt-auto text-[11px] leading-relaxed text-muted-foreground">
-          <b>Shift</b>+click = weapon · <b>Ctrl</b>+click / right-click = target ·
-          drag points. Or type coordinates manually.
-        </p>
       </div>
 
       {/* ---- ovládání hint + disclaimer ---- */}
