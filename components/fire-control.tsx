@@ -248,28 +248,6 @@ export function FireControl() {
         )}
       >
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-400">
-            <span className="inline-block size-2 rounded-full bg-blue-500" />
-            WEAPON (X / Y)
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <Field
-              k="wx"
-              value={coords.wx}
-              onEdit={editCoord}
-              focusedRef={focusedRef}
-              placeholder="X"
-            />
-            <Field
-              k="wy"
-              value={coords.wy}
-              onEdit={editCoord}
-              focusedRef={focusedRef}
-              placeholder="Y"
-            />
-          </div>
-        </div>
-        <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-rose-400">
             <span className="inline-block size-2 rounded-full bg-rose-500" />
             TARGET (X / Y)
