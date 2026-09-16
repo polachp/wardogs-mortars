@@ -135,9 +135,7 @@ export function createScene(
         weight: 2,
         dashArray: "8 8",
         interactive: false,
-        fill: true,
-        fillColor: "#a5772a",
-        fillOpacity: 0.22,
+        fill: false,
       }).addTo(layer);
       if (minU() > 0)
         ringMin = L.polygon(ringLatLngs(origin, minU()), {
