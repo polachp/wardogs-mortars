@@ -9,7 +9,7 @@ const FireControl = dynamic(
     ssr: false,
     loading: () => (
       <div className="grid h-dvh place-items-center text-muted-foreground">
-        Načítám mapu…
+        Loading map…
       </div>
     ),
   }

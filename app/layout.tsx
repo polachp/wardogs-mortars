@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "WARDOGS Fire Control",
   description:
-    "Zaměření minometu (L81) a děla (SPH-2) pro WARDOGS — vzdálenost, azimut, náměr (MIL). Unofficial fan project.",
+    "Mortar (L81) and artillery (SPH-2) fire control for WARDOGS — distance, azimuth, elevation (MIL). Unofficial fan project.",
 };
 
 export const viewport: Viewport = {
@@ -17,7 +17,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="cs" className="dark">
+    <html lang="en" className="dark">
       <body>{children}</body>
     </html>
   );

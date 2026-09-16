@@ -1,98 +1,100 @@
 # WARDOGS Mortars
 
-Webová utilita pro hru **WARDOGS** — počítá zaměření minometů a dělostřelectva
-(mortar / artillery fire control). Uživatel zadá pozici zbraně a cíl, nástroj
-vrátí **vzdálenost**, **azimut** a **náměr v MIL**.
+Web utility for the game **WARDOGS** — mortar and artillery fire control. The
+user sets the weapon position and the target; the tool returns **distance**,
+**azimuth**, and **elevation in MIL**.
 
-Inspirace / motivace:
+Inspiration / motivation:
 - <https://wardogs-artillery.com/>
 - <https://wardogs-fire-control.karel-vik.chatgpt.site/cs>
 
 ---
 
-## Cíl projektu
+## Project goal
 
-**Alternativní interface** nad daty a logikou existujícího nástroje
+An **alternative interface** on top of the data and logic of the existing tool
 [apollyon-sys/wardogs-calculator](https://github.com/apollyon-sys/wardogs-calculator)
-(MIT). Ten web je funkčně dobrý — chceme **jiné, vlastní UI**.
+(MIT). That site is functionally solid — we want a **different, custom UI**.
 
-Přebíráme:
-- balistiku (`data/weapons.json`),
-- kalibraci map (`maps/*.json` — bounds herní↔pixel),
-- dlaždice map (jejich CDN `assets.wardogs-artillery.com`).
+We reuse:
+- ballistics (`data/weapons.json`),
+- map calibration (`maps/*.json` — game ↔ pixel bounds),
+- map tiles (their CDN `assets.wardogs-artillery.com`).
 
-Stavíme vlastní: layout, komponenty, UX, vizuální styl.
+We build our own: layout, components, UX, visual style.
 
-Rychlý, offline-friendly kalkulátor palebných dat, který hráči použijí přímo
-během hry na druhém monitoru nebo mobilu. Žádná registrace, výpočet běží celý
-v prohlížeči.
+A fast, offline-friendly fire-control calculator that players use directly
+during a match on a second monitor or phone. No sign-up; the whole computation
+runs in the browser.
 
-### Klíčové vlastnosti (MVP)
+### Key features (MVP)
 
-- Zadání pozic — souřadnice zbraně (X, Y) a cíle (X, Y).
-- Výpočet:
-  - **Vzdálenost** v metrech,
-  - **Azimut** ve stupních (0° = sever, po směru hodin),
-  - **Náměr v MIL** interpolovaný z balistických tabulek zbraně.
-- Výběr zbraně (L81, SPH-2 …) s vlastními balistickými tabulkami.
-- SPH-2: dvě řešení — **LOW** a **HIGH** trajektorie.
-- Indikace dostřelu (cíl v dosahu / mimo dosah).
-- Swap pozic zbraň ↔ cíl.
-- Uložení a export/import cílů (localStorage).
+- Position input — weapon coordinates (X, Y) and target (X, Y).
+- Computation:
+  - **Distance** in meters,
+  - **Azimuth** in degrees (0° = north, clockwise),
+  - **Elevation in MIL** interpolated from the weapon's ballistic tables.
+- Weapon selection (L81, SPH-2 …) with per-weapon ballistic tables.
+- SPH-2: two solutions — **LOW** and **HIGH** trajectory.
+- Range indication (target in range / out of range).
+- Swap weapon ↔ target positions.
+- Save and export/import targets (localStorage).
 
-### Mimo MVP (backlog)
+### Out of MVP (backlog)
 
-- Hostované interaktivní mapy (Bakurani, Ozeti, Zestafona) — tile pyramid +
-  kalibrace, klik pro nastavení pozic. Viz `docs/MAPS.md`.
-- Fallback: user-upload vlastní mapy + kalibrace 2 body.
-- Korekce na převýšení terénu (elevation) pro podporované mapy.
-- Team lobby — sdílené kreslení a značky v reálném čase.
-- Extrakce souřadnic z nahraného screenshotu (OCR, lokálně v prohlížeči).
+- Hosted interactive maps (Bakurani, Ozeti, Zestafona) — tile pyramid +
+  calibration, click to set positions. See `docs/MAPS.md`.
+- Fallback: user-uploaded custom map + 2-point calibration.
+- Terrain elevation correction for supported maps.
+- Team lobby — shared drawing and markers in real time.
+- Coordinate extraction from an uploaded screenshot (OCR, locally in the browser).
 
 ---
 
-## Balistický model
+## Ballistic model
 
-Souřadnicová soustava mapy: **1 mapová jednotka = 100 m**.
+Map coordinate system: **1 map unit = 100 m**.
 
-Vstup: pozice zbraně `(Wx, Wy)`, pozice cíle `(Tx, Ty)`.
+Input: weapon position `(Wx, Wy)`, target position `(Tx, Ty)`.
 
 ```
 ΔX = Tx − Wx
 ΔY = Ty − Wy
 
-vzdálenost = 100 × √(ΔX² + ΔY²)          [m]
-azimut     = (atan2(ΔX, ΔY) + 360) mod 360   [°, 0° = sever, po směru hodin]
+distance = 100 × √(ΔX² + ΔY²)               [m]
+azimuth  = (atan2(ΔX, ΔY) + 360) mod 360    [°, 0° = north, clockwise]
 ```
 
-**Náměr (MIL)** se nepočítá vzorcem, ale **interpoluje** z komunitní balistické
-tabulky pro danou zbraň (dvojice `vzdálenost → MIL`). Mezi tabulkovými body se
-používá lineární interpolace.
+**Elevation (MIL)** is not computed by a formula but **interpolated** from a
+community ballistic table for the given weapon (`distance → MIL` pairs). Linear
+interpolation is used between table points.
 
-Předpoklady MVP: plochý terén, stejná výška zbraně a cíle.
+MVP assumptions: flat terrain, equal weapon and target altitude.
 
-### Zbraně (výchozí data)
+### Weapons (default data)
 
-| Zbraň  | Dostřel        | Trajektorie      |
+| Weapon | Range          | Trajectory       |
 |--------|----------------|------------------|
-| L81    | 132 – 684 m    | jedna            |
+| L81    | 132 – 684 m    | single           |
 | SPH-2  | 780 – 2 629 m  | LOW + HIGH       |
 
-> Balistické tabulky jsou komunitní a mohou se s patchi hry měnit — drží se
-> odděleně od kódu, aby šly snadno aktualizovat (viz `docs/BALLISTICS.md`).
+> Ballistic tables are community-sourced and may change with game patches — they
+> are kept separate from the code so they can be updated easily (see
+> `docs/BALLISTICS.md`).
 
 ---
 
-## Technologie
+## Tech stack
 
 - **Next.js** (App Router) + **TypeScript**.
-- **Tailwind CSS** + shadcn/ui pro UI.
-- Výpočet čistě client-side; balistické tabulky jako statická data.
-- Deploy na **Vercel**.
+- **Tailwind CSS** + shadcn/ui for the UI.
+- **Leaflet** for the interactive map (custom CRS over WARDOGS tiles).
+- Purely client-side computation; ballistic tables as static data.
+- Deploy on **Vercel**.
 
 ---
 
-## Vývoj
+## Development
 
 ```bash
 npm install
@@ -100,14 +102,32 @@ npm run dev      # http://localhost:3000
 npm run build
 ```
 
+Data is served from `public/` at `/data/*` and `/assets/*`. Legacy UI prototypes
+live in `prototypes/` (static HTML, reference only).
+
+### Controls
+
+- **Shift**+click = place weapon (blue)
+- **Ctrl**+click / right-click = place target (red)
+- Drag either point to move it
+- Or type X/Y coordinates manually in the side panel
+- The target shows an inline **azimuth + MIL** label
+
 ---
 
-## Struktura dokumentace
+## Documentation
 
-- `README.md` — tento přehled.
-- `docs/SPEC.md` — funkční specifikace, UI, výpočetní logika.
-- `docs/BALLISTICS.md` — balistické tabulky zbraní a jejich formát.
-- `docs/MAPS.md` — hostování map, tile pyramid, kalibrace souřadnic.
-- `docs/PROTOTYPES.md` — varianty interface, jak spustit.
-- `docs/ROADMAP.md` — plán vývoje po fázích.
-- `docs/HANDOFF.md` — **navázání práce po pauze** (stav, jak spustit, co dál).
+- `README.md` — this overview.
+- `docs/SPEC.md` — functional spec, UI, computation logic.
+- `docs/BALLISTICS.md` — weapon ballistic tables and their format.
+- `docs/MAPS.md` — map hosting, tile pyramid, coordinate calibration.
+- `docs/PROTOTYPES.md` — interface variants, how to run.
+- `docs/ROADMAP.md` — phased development plan.
+- `docs/HANDOFF.md` — **resuming work after a break** (state, how to run, next steps).
+
+---
+
+## Disclaimer
+
+Unofficial fan project. Game maps & data © BULKHEAD. Not affiliated with or
+endorsed by BULKHEAD or the WARDOGS team.

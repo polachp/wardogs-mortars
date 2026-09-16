@@ -166,12 +166,12 @@ export function FireControl() {
       : fmtMil(sol.single)
     : "—";
   const statusText = !sol
-    ? "Shift+klik zbraň · Ctrl / pravé tl. cíl"
+    ? "Shift+click weapon · Ctrl / right-click target"
     : sol.inRange
-    ? "✓ v dostřelu"
+    ? "✓ in range"
     : sol.status === "under"
-    ? "pod minimem dostřelu"
-    : "mimo dostřel";
+    ? "below minimum range"
+    : "out of range";
 
   return (
     <div className="relative h-dvh w-screen overflow-hidden bg-background">
@@ -208,7 +208,7 @@ export function FireControl() {
             size="icon"
             variant="outline"
             className="bg-card/85 backdrop-blur"
-            aria-label={panelOpen ? "Zavřít panel" : "Otevřít panel"}
+            aria-label={panelOpen ? "Close panel" : "Open panel"}
             onClick={() => setPanelOpen((o) => !o)}
           >
             {panelOpen ? <PanelRightClose /> : <PanelRightOpen />}
@@ -218,11 +218,11 @@ export function FireControl() {
 
       {/* ---- HUD: velké odečty ---- */}
       <div className="pointer-events-none absolute bottom-4 left-4 z-[500] w-72 rounded-xl border bg-card/85 p-4 backdrop-blur">
-        <Readout label="AZIMUT" value={sol ? `${sol.azimuth.toFixed(1)}°` : "—"} big />
+        <Readout label="AZIMUTH" value={sol ? `${sol.azimuth.toFixed(1)}°` : "—"} big />
         <div className="mt-3 grid grid-cols-2 gap-3">
           <Readout label="MIL" value={milText} />
           <Readout
-            label="VZDÁLENOST"
+            label="DISTANCE"
             value={sol ? `${Math.round(sol.distanceMeters)} m` : "—"}
           />
         </div>
@@ -250,7 +250,7 @@ export function FireControl() {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-blue-400">
             <span className="inline-block size-2 rounded-full bg-blue-500" />
-            ZBRAŇ (X / Y)
+            WEAPON (X / Y)
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <Field
@@ -272,7 +272,7 @@ export function FireControl() {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-rose-400">
             <span className="inline-block size-2 rounded-full bg-rose-500" />
-            CÍL (X / Y)
+            TARGET (X / Y)
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <Field
@@ -294,7 +294,7 @@ export function FireControl() {
 
         <div className="grid grid-cols-2 gap-2">
           <Button variant="secondary" onClick={swap}>
-            <ArrowLeftRight /> Prohodit
+            <ArrowLeftRight /> Swap
           </Button>
           <Button variant="secondary" onClick={reset}>
             <RotateCcw /> Reset
@@ -302,20 +302,21 @@ export function FireControl() {
         </div>
         <Button variant="outline" onClick={copyResult} disabled={!sol}>
           {copied ? <Check /> : <Copy />}
-          {copied ? "Zkopírováno" : "Kopírovat řešení"}
+          {copied ? "Copied" : "Copy solution"}
         </Button>
 
         <p className="mt-auto text-[11px] leading-relaxed text-muted-foreground">
-          <b>Shift</b>+klik = zbraň · <b>Ctrl</b>+klik / pravé tl. = cíl · body lze
-          táhnout. Nebo přepiš čísla ručně.
+          <b>Shift</b>+click = weapon · <b>Ctrl</b>+click / right-click = target ·
+          drag points. Or type coordinates manually.
         </p>
       </div>
 
       {/* ---- ovládání hint + disclaimer ---- */}
       <div className="pointer-events-none absolute bottom-2 right-3 z-[500] max-w-md text-right text-[11px] leading-tight text-muted-foreground/80">
         <div>
-          <b className="text-blue-400">Shift</b>+klik zbraň ·{" "}
-          <b className="text-rose-400">Ctrl</b>+klik / pravé tl. cíl · táhni body
+          <b className="text-blue-400">Shift</b>+click weapon ·{" "}
+          <b className="text-rose-400">Ctrl</b>+click / right-click target · drag
+          points
         </div>
         <div className="mt-0.5 opacity-70">
           Unofficial fan project. Maps &amp; data © BULKHEAD.

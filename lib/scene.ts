@@ -206,7 +206,7 @@ export function createScene(
       weapon && origin && target
         ? fireSolution(weapon, origin, target, metersPerUnit)
         : null;
-    if (!sol) return "cíl";
+    if (!sol) return "target";
     const mil = sol.hasArc
       ? `L${fmtMil(sol.low)} / H${fmtMil(sol.high)}`
       : fmtMil(sol.single);
