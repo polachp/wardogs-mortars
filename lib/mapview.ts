@@ -75,17 +75,18 @@ export function createMap(
     gameToLatLng(b.minX, b.minY),
     gameToLatLng(b.maxX, b.maxY)
   );
-  map.fitBounds(playable);
-  map.setMaxBounds(
-    L.latLngBounds(
-      gameToLatLng(tb.minX, tb.minY),
-      gameToLatLng(tb.maxX, tb.maxY)
-    ).pad(0.1)
+  // default zoom = fit celé mapy (celý tile extent), ne jen hratelný výřez
+  const full = L.latLngBounds(
+    gameToLatLng(tb.minX, tb.minY),
+    gameToLatLng(tb.maxX, tb.maxY)
   );
+  map.fitBounds(full);
+  map.setMaxBounds(full.pad(0.1));
 
+  const zones = drawZones(map, mapCfg);
   const markers = addPresetMarkers(map, mapCfg);
 
-  return { map, layer, markers, playable, crs };
+  return { map, layer, markers, zones, playable, crs };
 }
 
 // Spawny + věže dle vzoru apollyon. Marker x,y jsou v metrech → world = /100.
@@ -130,11 +131,43 @@ export function addPresetMarkers(
             iconAnchor: [11, 11],
             className: "preset-marker",
           });
-      L.marker(gameToLatLng(m.x / mpu, m.y / mpu), {
+      const mk = L.marker(gameToLatLng(m.x / mpu, m.y / mpu), {
         icon,
         interactive: false,
         keyboard: false,
       }).addTo(group);
+      // věže: průhledný popisek T1/T2/T3 (číslo z labelu "Tower N")
+      if (m.icon === "tower" && m.label) {
+        const num = /(\d+)/.exec(m.label)?.[1];
+        mk.bindTooltip(num ? `T${num}` : m.label, {
+          permanent: true,
+          direction: "top",
+          offset: [0, -8],
+          className: "tower-label",
+          interactive: false,
+        });
+      }
     });
+  return group;
+}
+
+// Spawn zóny (home báze frakcí) — výrazné barevné polygony z map dat.
+export function drawZones(map: L.Map, mapCfg: MapConfig) {
+  const group = L.layerGroup().addTo(map);
+  const mpu = mapCfg.coordinateMetersPerUnit ?? 100;
+  (mapCfg.polygons ?? []).forEach((p) => {
+    if (!p.points?.length) return;
+    const latlngs = p.points.map((pt) => gameToLatLng(pt.x / mpu, pt.y / mpu));
+    const color = p.color ?? "#e2e8f0";
+    L.polygon(latlngs, {
+      color,
+      weight: (p.strokeWidth ?? 2) + 1,
+      opacity: 0.95,
+      dashArray: p.dashed ? "8 6" : undefined,
+      fillColor: color,
+      fillOpacity: Math.max(p.fillOpacity ?? 0.12, 0.2),
+      interactive: false,
+    }).addTo(group);
+  });
   return group;
 }

@@ -49,6 +49,15 @@ export interface MapMarker {
   label?: string;
 }
 
+export interface MapPolygon {
+  color?: string;
+  fillOpacity?: number;
+  strokeWidth?: number;
+  dashed?: boolean;
+  label?: string;
+  points: { x: number; y: number }[];
+}
+
 export interface MapConfig {
   id: string;
   name: string;
@@ -65,6 +74,7 @@ export interface MapConfig {
     styles?: Record<string, { path: string }>;
   };
   markers?: MapMarker[];
+  polygons?: MapPolygon[];
 }
 
 export interface MilResult {

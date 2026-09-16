@@ -40,7 +40,6 @@ export function createScene(
   let ringMin: L.Polygon | null = null;
   let ringLow: L.Polygon | null = null;
   let ringMaxT: L.Polygon | null = null;
-  let ringMinT: L.Polygon | null = null;
 
   const round = (g: Point): Point => ({
     x: +g.x.toFixed(2),
@@ -134,7 +133,7 @@ export function createScene(
   function draw() {
     layer.clearLayers();
     originMarker = targetMarker = null;
-    line = ringMin = ringMax = ringLow = ringMinT = ringMaxT = null;
+    line = ringMin = ringMax = ringLow = ringMaxT = null;
 
     if (origin && weapon) {
       ringMax = L.polygon(ringLatLngs(origin, maxU()), {
@@ -173,15 +172,6 @@ export function createScene(
         interactive: false,
         fill: false,
       }).addTo(layer);
-      if (minU() > 0)
-        ringMinT = L.polygon(ringLatLngs(target, minU()), {
-          color: "#2dd4bf",
-          weight: 1,
-          opacity: 0.45,
-          dashArray: "3 6",
-          interactive: false,
-          fill: false,
-        }).addTo(layer);
     }
     if (origin && target)
       line = L.polyline(
@@ -239,7 +229,6 @@ export function createScene(
     if (origin && ringMin) ringMin.setLatLngs(ringLatLngs(origin, minU()));
     if (origin && ringLow) ringLow.setLatLngs(ringLatLngs(origin, lowMinU()));
     if (target && ringMaxT) ringMaxT.setLatLngs(ringLatLngs(target, maxU()));
-    if (target && ringMinT) ringMinT.setLatLngs(ringLatLngs(target, minU()));
     if (origin && target && line)
       line.setLatLngs([
         gameToLatLng(origin.x, origin.y),

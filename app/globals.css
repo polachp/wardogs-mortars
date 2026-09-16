@@ -83,6 +83,21 @@ body {
   border: 0 !important;
 }
 
+/* průhledné popisky věží (T1/T2/T3) */
+.leaflet-tooltip.tower-label {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #fff;
+  font: 700 11px/1 ui-monospace, "SFMono-Regular", Menlo, monospace;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9);
+  padding: 0;
+}
+.leaflet-tooltip.tower-label::before {
+  display: none;
+}
+
 /* popisek u cíle: AZ + MIL */
 .leaflet-tooltip.fc-label {
   background: rgba(11, 13, 16, 0.9);
