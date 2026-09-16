@@ -258,6 +258,28 @@ export function FireControl() {
 
 /* ---- pomocné ---- */
 
+// česká klávesnice: číselná řada bez Shiftu píše diakritiku → přemapuj na číslice
+const CZ_DIGITS: Record<string, string> = {
+  "+": "1",
+  "ě": "2",
+  "š": "3",
+  "č": "4",
+  "ř": "5",
+  "ž": "6",
+  "ý": "7",
+  "á": "8",
+  "í": "9",
+  "é": "0",
+};
+
+function czToNum(s: string): string {
+  return s
+    .split("")
+    .map((ch) => CZ_DIGITS[ch] ?? ch)
+    .join("")
+    .replace(",", ".");
+}
+
 function parsePoint(x: string, y: string): Point | null {
   if (x.trim() === "" || y.trim() === "") return null;
   const nx = Number(x);
@@ -311,8 +333,18 @@ function Field({
       placeholder={placeholder}
       value={value}
       onFocus={() => (focusedRef.current = k)}
-      onBlur={() => {
+      onBlur={(e) => {
         if (focusedRef.current === k) focusedRef.current = null;
+        // přepiš českou diakritiku na číslice při opuštění pole
+        const conv = czToNum(e.target.value);
+        if (conv !== e.target.value) onEdit(k, conv);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          const conv = czToNum(e.currentTarget.value);
+          if (conv !== e.currentTarget.value) onEdit(k, conv);
+          e.currentTarget.blur();
+        }
       }}
       onChange={(e) => onEdit(k, e.target.value)}
       className="h-9 w-full rounded-md border bg-input/40 px-3 font-mono text-sm outline-none focus:ring-1 focus:ring-ring"
