@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WD Fire · Recon</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root { color-scheme: dark; --bg:#0b0f14; --ink:#e6edf3; --mut:#7d8896; --blue:#3b82f6; --red:#f43f5e; }
+  * { box-sizing: border-box; }
+  html,body { margin:0; height:100%; font-family: ui-sans-serif, system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  #map { position:absolute; inset:0; background:#000; }
+  .leaflet-container { background:#000; }
+  .pill { position:absolute; z-index:500; background:rgba(17,23,31,.92); backdrop-filter:blur(8px);
+          border:1px solid #232b36; border-radius:12px; }
+  #top { top:14px; left:14px; display:flex; gap:6px; padding:6px; align-items:center; }
+  #top select { background:#0e141b; color:var(--ink); border:1px solid #2a333f; border-radius:8px;
+                padding:8px 10px; font-size:13px; outline:none; }
+  #mapBtns { display:flex; gap:4px; }
+  #mapBtns button { background:#0e141b; color:var(--ink); border:1px solid #2a333f; border-radius:8px;
+                    padding:8px 10px; font-size:13px; cursor:pointer; }
+  #mapBtns button.on { border-color:var(--blue); background:#12233c; }
+  #card { bottom:14px; left:14px; min-width:230px; padding:16px 18px; }
+  .lbl { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--mut); }
+  .big { font-variant-numeric: tabular-nums; font-weight:700; line-height:1; }
+  .az { font-size:46px; }
+  .mil { font-size:30px; color:#9ecbff; }
+  .row { display:flex; gap:22px; align-items:baseline; margin-top:4px; }
+  .sub { font-size:13px; color:var(--mut); font-variant-numeric:tabular-nums; }
+  .warn { color:var(--red); }
+  .ok { color:#4ade80; }
+  #hint { position:absolute; z-index:500; bottom:14px; right:14px; font-size:12px; color:var(--mut);
+          background:rgba(17,23,31,.7); padding:6px 10px; border-radius:8px; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="top" class="pill">
+  <span id="mapBtns"></span>
+  <select id="wpnSel"></select>
+</div>
+<div id="card" class="pill">
+  <div class="lbl">Azimut</div>
+  <div class="az big" id="az">—</div>
+  <div class="row">
+    <div><div class="lbl">MIL</div><div class="mil big" id="mil">—</div></div>
+    <div><div class="lbl">Vzdálenost</div><div class="big" style="font-size:22px" id="dist">—</div></div>
+  </div>
+  <div class="sub" id="status" style="margin-top:10px"><span class="dot" style="background:#3b82f6"></span>zbraň → cíl</div>
+</div>
+<div id="hint"><b style="color:#3b82f6">Shift</b>+klik = zbraň · <b style="color:#f43f5e">Ctrl</b>+klik / pravé tl. = cíl · táhni body</div>
+
+<script type="module">
+import { loadData, fmtMil } from "../lib/firecontrol.js";
+import { createMap } from "../lib/mapview.js";
+import { createScene } from "../lib/scene.js";
+
+const { weapons, maps, defaultWeapon } = await loadData();
+const mapBtns = document.getElementById("mapBtns");
+const wpnSel = document.getElementById("wpnSel");
+let mapIdx = 0;
+maps.forEach((m,i)=>{ const b=document.createElement("button"); b.textContent=m.name; b.onclick=()=>{mapIdx=i;boot(maps[i]);}; mapBtns.appendChild(b);});
+function paintMaps(){ [...mapBtns.children].forEach((b,i)=>b.classList.toggle("on",i===mapIdx)); }
+weapons.forEach((w,i)=> wpnSel.add(new Option(w.name, i)));
+wpnSel.value = Math.max(0, weapons.findIndex(w=>w.id===defaultWeapon));
+
+let mapObj, scene;
+function boot(mapCfg) {
+  const c = createMap(document.getElementById("map"), mapCfg);
+  mapObj = c.map;
+  scene = createScene(mapObj, { metersPerUnit: mapCfg.coordinateMetersPerUnit ?? 100, onUpdate: render });
+  paintMaps(); scene.setWeapon(weapons[wpnSel.value]);
+}
+function render({ solution, placing }) {
+  const az = document.getElementById("az"), mil=document.getElementById("mil"),
+        dist=document.getElementById("dist"), st=document.getElementById("status");
+  if (!solution) {
+    az.textContent="—"; mil.textContent="—"; dist.textContent="—";
+    st.innerHTML = `<span class="dot" style="background:#3b82f6"></span>Shift+klik zbraň · Ctrl / pravé tl. cíl`;
+    return;
+  }
+  az.textContent = solution.azimuth.toFixed(1)+"°";
+  const arc = solution.hasArc ? `${fmtMil(solution.low)} / ${fmtMil(solution.high)}` : fmtMil(solution.single);
+  mil.textContent = arc;
+  dist.textContent = Math.round(solution.distanceMeters)+" m";
+  st.innerHTML = solution.inRange
+    ? `<span class="ok">● v dostřelu</span>`
+    : `<span class="warn">● ${solution.status==='under'?'pod minimem':'mimo dostřel'}</span>`;
+}
+wpnSel.onchange = () => scene.setWeapon(weapons[wpnSel.value]);
+boot(maps[0]);
+</script>
+</body>
+</html>

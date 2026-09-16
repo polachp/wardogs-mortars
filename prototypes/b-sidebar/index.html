@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WD Fire · Sidebar</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root { color-scheme: dark; --bg:#0b0f14; --panel:#11171f; --ink:#e6edf3; --mut:#7d8896;
+          --blue:#3b82f6; --red:#f43f5e; --line:#232b36; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; font-family: ui-sans-serif, system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  #wrap { display:grid; grid-template-columns: 380px 1fr; height:100%; }
+  #map { background:#000; }
+  .leaflet-container { background:#000; }
+  aside { order:-1; background:var(--panel); border-right:1px solid var(--line); padding:20px; overflow:auto; display:flex; flex-direction:column; gap:18px;}
+  h1 { font-size:15px; margin:0; letter-spacing:.06em; }
+  h1 small { color:var(--mut); font-weight:400; }
+  .field label { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut); display:block; margin-bottom:6px;}
+  select, input { width:100%; background:#0e141b; color:var(--ink); border:1px solid #2a333f; border-radius:8px; padding:9px 10px; font-size:14px; outline:none;}
+  .wpns { display:flex; gap:8px; }
+  .wpns button { flex:1; background:#0e141b; border:1px solid #2a333f; color:var(--ink); border-radius:8px; padding:10px; cursor:pointer; font-size:13px;}
+  .wpns button.on { border-color:var(--blue); background:#12233c; }
+  .xy { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .xy .tag { grid-column:1/3; font-size:11px; letter-spacing:.12em; text-transform:uppercase; }
+  .tagblue { color:#7fb3ff; } .tagred { color:#ff8fa3; }
+  .readout { border:1px solid var(--line); border-radius:12px; padding:16px; background:#0d131a; }
+  .metrics { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .metric .k { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut);}
+  .metric .v { font-size:28px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.1;}
+  .metric .v.mil { color:#9ecbff; }
+  .status { margin-top:14px; font-size:13px; padding:8px 10px; border-radius:8px; text-align:center;}
+  .status.ok { background:#0f2a1a; color:#4ade80;} .status.bad{ background:#2a0f14; color:#ff8fa3;}
+  .status.idle{ background:#141b24; color:var(--mut);}
+  .actions { display:flex; gap:8px; }
+  .actions button { flex:1; background:#0e141b; border:1px solid #2a333f; color:var(--ink); border-radius:8px; padding:9px; cursor:pointer;}
+  .hint { font-size:12px; color:var(--mut); }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="map"></div>
+  <aside>
+    <h1>WARDOGS Fire Control <small>· sidebar</small></h1>
+    <div class="field"><label>Mapa</label><div class="wpns" id="mapBtns"></div></div>
+    <div class="field"><label>Zbraň</label><div class="wpns" id="wpns"></div></div>
+
+    <div class="readout">
+      <div class="metrics">
+        <div class="metric"><div class="k">Azimut</div><div class="v" id="az">—</div></div>
+        <div class="metric"><div class="k">Vzdálenost</div><div class="v" id="dist">—</div></div>
+        <div class="metric" style="grid-column:1/3"><div class="k">Náměr (MIL)</div><div class="v mil" id="mil">—</div></div>
+      </div>
+      <div class="status idle" id="status">urči pozici zbraně</div>
+    </div>
+
+    <div class="field">
+      <div class="xy">
+        <div class="tag tagblue">● Zbraň (X / Y)</div>
+        <input id="wx" placeholder="X" inputmode="decimal"><input id="wy" placeholder="Y" inputmode="decimal">
+        <div class="tag tagred" style="margin-top:6px">● Cíl (X / Y)</div>
+        <input id="tx" placeholder="X" inputmode="decimal"><input id="ty" placeholder="Y" inputmode="decimal">
+      </div>
+    </div>
+    <div class="actions">
+      <button id="swap">⇅ Prohodit</button>
+      <button id="reset">Reset</button>
+    </div>
+    <div class="hint"><b>Shift</b>+klik = zbraň · <b>Ctrl</b>+klik / <b>pravé tl.</b> = cíl · body lze táhnout. Nebo přepiš čísla ručně.</div>
+  </aside>
+</div>
+
+<script type="module">
+import { loadData, fmtMil } from "../lib/firecontrol.js";
+import { createMap } from "../lib/mapview.js";
+import { createScene } from "../lib/scene.js";
+
+const { weapons, maps, defaultWeapon } = await loadData();
+const mapBtns = document.getElementById("mapBtns");
+let mapIdx = 0;
+maps.forEach((m,i)=>{ const b=document.createElement("button"); b.textContent=m.name; b.onclick=()=>{mapIdx=i;boot(maps[i]);}; mapBtns.appendChild(b);});
+function paintMaps(){ [...mapBtns.children].forEach((b,i)=>b.classList.toggle("on",i===mapIdx)); }
+const wpnBox = document.getElementById("wpns");
+let wpnIdx = Math.max(0, weapons.findIndex(w=>w.id===defaultWeapon));
+weapons.forEach((w,i)=>{ const b=document.createElement("button"); b.textContent=w.name; b.onclick=()=>{wpnIdx=i;paintWpns();scene.setWeapon(weapons[i]);}; wpnBox.appendChild(b);});
+function paintWpns(){ [...wpnBox.children].forEach((b,i)=>b.classList.toggle("on",i===wpnIdx)); }
+
+const $ = (id)=>document.getElementById(id);
+let scene;
+function boot(mapCfg){
+  const c = createMap($("map"), mapCfg);
+  scene = createScene(c.map, { metersPerUnit: mapCfg.coordinateMetersPerUnit ?? 100, onUpdate: render });
+  paintMaps(); paintWpns(); scene.setWeapon(weapons[wpnIdx]);
+}
+function reflect(id, val){
+  const e=$(id);
+  if(document.activeElement===e) return;        // nepřepisuj pole, do kterého se píše
+  if(val!==null && val!==undefined) e.value=val; // needmaž — mazání jen v reset()
+}
+function render({ origin, target, solution }){
+  reflect("wx", origin?origin.x:null); reflect("wy", origin?origin.y:null);
+  reflect("tx", target?target.x:null); reflect("ty", target?target.y:null);
+  const st=$("status");
+  if(!solution){
+    $("az").textContent="—"; $("mil").textContent="—"; $("dist").textContent="—";
+    st.className="status idle"; st.textContent = "Shift+klik zbraň · Ctrl / pravé tl. cíl";
+    return;
+  }
+  $("az").textContent = solution.azimuth.toFixed(1)+"°";
+  $("dist").textContent = Math.round(solution.distanceMeters)+" m";
+  $("mil").textContent = solution.hasArc ? `${fmtMil(solution.low)} / ${fmtMil(solution.high)}` : fmtMil(solution.single);
+  if(solution.inRange){ st.className="status ok"; st.textContent="✓ v dostřelu"; }
+  else { st.className="status bad"; st.textContent = solution.status==='under'?"pod minimem dostřelu":"mimo dostřel"; }
+}
+function readXY(){
+  const o = ($("wx").value&&$("wy").value)?{x:+$("wx").value,y:+$("wy").value}:null;
+  const t = ($("tx").value&&$("ty").value)?{x:+$("tx").value,y:+$("ty").value}:null;
+  if(o) scene.setOrigin(o); if(t) scene.setTarget(t);
+}
+["wx","wy","tx","ty"].forEach(id=>$(id).addEventListener("change", readXY));
+$("swap").onclick=()=>{ const s=scene.state; if(s.origin&&s.target){ scene.setOrigin(s.target); scene.setTarget(s.origin);} };
+$("reset").onclick=()=>{ ["wx","wy","tx","ty"].forEach(id=>$(id).value=""); scene.reset(); };
+boot(maps[0]);
+</script>
+</body>
+</html>

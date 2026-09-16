@@ -1,0 +1,13 @@
+/node_modules
+/.next
+/out
+/build
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+.DS_Store
+npm-debug.log*
+/.playwright-mcp
+/recon.png
+/sidebar.png
+/next-*.png
