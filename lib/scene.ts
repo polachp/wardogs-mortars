@@ -84,6 +84,32 @@ export function createScene(
   const CUR_TARGET = crosshair("f0607a");
   const container = map.getContainer();
 
+  // živý popisek souřadnic kurzoru (jen když držím Shift/Ctrl), zaokr. na 1 desetinu
+  const coordEl = L.DomUtil.create("div", "coord-cursor", container);
+  coordEl.style.display = "none";
+
+  function showCoord(e: L.LeafletMouseEvent) {
+    const oe = e.originalEvent;
+    const shift = !!oe?.shiftKey;
+    const ctrl = !!(oe?.ctrlKey || oe?.metaKey);
+    if (!shift && !ctrl) {
+      coordEl.style.display = "none";
+      return;
+    }
+    const g = latLngToGame(e.latlng);
+    coordEl.textContent = `${g.x.toFixed(1)} / ${g.y.toFixed(1)}`;
+    coordEl.style.left = `${e.containerPoint.x + 14}px`;
+    coordEl.style.top = `${e.containerPoint.y + 14}px`;
+    coordEl.classList.toggle("is-weapon", shift);
+    coordEl.classList.toggle("is-target", ctrl && !shift);
+    coordEl.style.display = "block";
+  }
+  function hideCoord() {
+    coordEl.style.display = "none";
+  }
+  map.on("mousemove", showCoord);
+  map.on("mouseout", hideCoord);
+
   function applyMarkerMod() {
     [originMarker, targetMarker].forEach((mk) => {
       if (!mk) return;
@@ -108,11 +134,13 @@ export function createScene(
       : e.ctrlKey || e.metaKey
       ? CUR_TARGET
       : "";
+    if (!modActive) coordEl.style.display = "none";
     applyMarkerMod();
   }
   function onBlur() {
     modActive = false;
     container.style.cursor = "";
+    coordEl.style.display = "none";
     applyMarkerMod();
   }
   document.addEventListener("keydown", onKey);
@@ -293,6 +321,9 @@ export function createScene(
       window.removeEventListener("blur", onBlur);
       map.off("click", onClick);
       map.off("contextmenu", placeTarget);
+      map.off("mousemove", showCoord);
+      map.off("mouseout", hideCoord);
+      coordEl.remove();
       layer.clearLayers();
     },
     get state() {
