@@ -10,14 +10,7 @@ import { fmtMil, loadData } from "@/lib/firecontrol";
 import { createMap } from "@/lib/mapview";
 import { createScene, type Scene } from "@/lib/scene";
 import type { MapConfig, Point, SceneState, Weapon } from "@/lib/types";
-import {
-  ArrowLeftRight,
-  Check,
-  Copy,
-  PanelRightClose,
-  PanelRightOpen,
-  RotateCcw,
-} from "lucide-react";
+import { Check, Copy } from "lucide-react";
 
 interface Loaded {
   weapons: Weapon[];
@@ -41,7 +34,6 @@ export function FireControl() {
     solution: null,
   });
   const [coords, setCoords] = useState<Coords>(EMPTY);
-  const [panelOpen, setPanelOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const mapElRef = useRef<HTMLDivElement | null>(null);
@@ -125,22 +117,6 @@ export function FireControl() {
     });
   }
 
-  function swap() {
-    const s = sceneRef.current;
-    const st = s?.state;
-    if (s && st?.origin && st?.target) {
-      const o = st.origin;
-      const t = st.target;
-      s.setOrigin(t);
-      s.setTarget(o);
-    }
-  }
-
-  function reset() {
-    sceneRef.current?.reset();
-    setCoords(EMPTY);
-  }
-
   async function copyResult() {
     const sol = state.solution;
     if (!sol) return;
@@ -203,17 +179,6 @@ export function FireControl() {
             </Button>
           ))}
         </div>
-        <div className="ml-auto pointer-events-auto">
-          <Button
-            size="icon"
-            variant="outline"
-            className="bg-card/85 backdrop-blur"
-            aria-label={panelOpen ? "Close panel" : "Open panel"}
-            onClick={() => setPanelOpen((o) => !o)}
-          >
-            {panelOpen ? <PanelRightClose /> : <PanelRightOpen />}
-          </Button>
-        </div>
       </div>
 
       {/* ---- HUD: velké odečty ---- */}
@@ -240,13 +205,8 @@ export function FireControl() {
         </div>
       </div>
 
-      {/* ---- sbalitelný panel (graft ze Sidebaru) ---- */}
-      <div
-        className={cn(
-          "absolute right-0 top-0 z-[600] flex h-full w-80 max-w-[85vw] flex-col gap-4 overflow-y-auto border-l bg-card/95 p-4 pt-16 backdrop-blur transition-transform duration-200",
-          panelOpen ? "translate-x-0" : "translate-x-full"
-        )}
-      >
+      {/* ---- panel: cíl X/Y + kopírování (vždy viditelný) ---- */}
+      <div className="absolute right-0 top-0 z-[600] flex h-full w-80 max-w-[85vw] flex-col gap-4 overflow-y-auto border-l bg-card/95 p-4 pt-16 backdrop-blur">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-rose-400">
             <span className="inline-block size-2 rounded-full bg-rose-500" />
@@ -270,14 +230,6 @@ export function FireControl() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={swap}>
-            <ArrowLeftRight /> Swap
-          </Button>
-          <Button variant="secondary" onClick={reset}>
-            <RotateCcw /> Reset
-          </Button>
-        </div>
         <Button variant="outline" onClick={copyResult} disabled={!sol}>
           {copied ? <Check /> : <Copy />}
           {copied ? "Copied" : "Copy solution"}
