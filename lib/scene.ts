@@ -5,7 +5,7 @@
  *  - prostý levý klik nedělá nic
  */
 import L from "leaflet";
-import { fireSolution, fmtMil } from "./firecontrol";
+import { fireSolution } from "./firecontrol";
 import { gameToLatLng, latLngToGame } from "./mapview";
 import type { Point, SceneState, Weapon } from "./types";
 
@@ -231,24 +231,34 @@ export function createScene(
       bindDrag(targetMarker, "target");
     }
     applyMarkerMod();
+    updateLabel();
   }
 
-  // malý popisek u cíle: azimut + MIL (čitelné přímo od cíle)
+  // malý popisek u cíle: azimut + vzdálenost (čitelné přímo od cíle)
+  function currentSolution() {
+    return weapon && origin && target
+      ? fireSolution(weapon, origin, target, metersPerUnit)
+      : null;
+  }
+
   function labelHtml() {
-    const sol =
-      weapon && origin && target
-        ? fireSolution(weapon, origin, target, metersPerUnit)
-        : null;
+    const sol = currentSolution();
     if (!sol) return "target";
-    const mil = sol.hasArc
-      ? `L${fmtMil(sol.low)} / H${fmtMil(sol.high)}`
-      : fmtMil(sol.single);
-    return `<b>${sol.azimuth.toFixed(1)}°</b> · ${mil} MIL`;
+    const head = `<b>${Math.round(sol.azimuth)}°</b> · ${Math.round(
+      sol.distanceMeters
+    )} m`;
+    if (sol.inRange) return head;
+    const warn = sol.status === "under" ? "⚠ TOO CLOSE" : "⚠ TOO FAR";
+    return `${head}<br><span class="fc-warn">${warn}</span>`;
   }
 
   function updateLabel() {
-    if (targetMarker && targetMarker.getTooltip())
-      targetMarker.setTooltipContent(labelHtml());
+    const tt = targetMarker?.getTooltip();
+    if (!targetMarker || !tt) return;
+    const sol = currentSolution();
+    targetMarker.setTooltipContent(labelHtml());
+    const el = tt.getElement();
+    if (el) el.classList.toggle("fc-label--oob", !!sol && !sol.inRange);
   }
 
   // přesun prstenců + čáry během tažení (bez rekreace markerů)

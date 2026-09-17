@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { fmtMil, loadData } from "@/lib/firecontrol";
+import { loadData } from "@/lib/firecontrol";
 import { createMap } from "@/lib/mapview";
 import { createScene, type Scene } from "@/lib/scene";
 import type { MapConfig, Point, SceneState, Weapon } from "@/lib/types";
@@ -120,12 +120,9 @@ export function FireControl() {
   async function copyResult() {
     const sol = state.solution;
     if (!sol) return;
-    const mil = sol.hasArc
-      ? `LOW ${fmtMil(sol.low)} / HIGH ${fmtMil(sol.high)} MIL`
-      : `${fmtMil(sol.single)} MIL`;
-    const txt = `AZ ${sol.azimuth.toFixed(1)}° · ${Math.round(
+    const txt = `AZ ${Math.round(sol.azimuth)}° · ${Math.round(
       sol.distanceMeters
-    )} m · ${mil}`;
+    )} m`;
     try {
       await navigator.clipboard.writeText(txt);
       setCopied(true);
@@ -136,18 +133,12 @@ export function FireControl() {
   }
 
   const sol = state.solution;
-  const milText = sol
-    ? sol.hasArc
-      ? `${fmtMil(sol.low)} / ${fmtMil(sol.high)}`
-      : fmtMil(sol.single)
-    : "—";
+  const oob = !!sol && !sol.inRange;
+  const warnText =
+    sol?.status === "under" ? "⚠ TOO CLOSE" : "⚠ TOO FAR";
   const statusText = !sol
     ? "Shift+click weapon · Ctrl / right-click target"
-    : sol.inRange
-    ? "✓ in range"
-    : sol.status === "under"
-    ? "below minimum range"
-    : "out of range";
+    : "✓ in range";
 
   return (
     <div className="relative h-dvh w-screen overflow-hidden bg-background">
@@ -182,32 +173,39 @@ export function FireControl() {
       </div>
 
       {/* ---- HUD + cíl X/Y + kopírování (jedno okno vlevo dole) ---- */}
-      <div className="absolute bottom-4 left-4 z-[500] w-72 rounded-xl border bg-card/85 p-4 backdrop-blur">
+      <div
+        className={cn(
+          "absolute bottom-4 left-4 z-[500] w-72 rounded-xl border bg-card/85 p-4 backdrop-blur",
+          oob && "border-rose-500 ring-1 ring-rose-500/50"
+        )}
+      >
         <div className="pointer-events-none">
           <Readout
             label="AZIMUTH"
-            value={sol ? `${sol.azimuth.toFixed(1)}°` : "—"}
+            value={sol ? `${Math.round(sol.azimuth)}°` : "—"}
             big
           />
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <Readout label="MIL" value={milText} />
+          <div className="mt-3">
             <Readout
               label="DISTANCE"
               value={sol ? `${Math.round(sol.distanceMeters)} m` : "—"}
+              valueClassName={oob ? "text-rose-400" : undefined}
             />
           </div>
-          <div
-            className={cn(
-              "mt-3 text-xs",
-              !sol
-                ? "text-muted-foreground"
-                : sol.inRange
-                ? "text-emerald-400"
-                : "text-rose-400"
-            )}
-          >
-            {statusText}
-          </div>
+          {oob ? (
+            <div className="mt-3 inline-flex items-center rounded-md bg-rose-500/15 px-2 py-1 text-xs font-semibold tracking-wider text-rose-400 ring-1 ring-rose-500/40">
+              {warnText}
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "mt-3 text-xs",
+                !sol ? "text-muted-foreground" : "text-emerald-400"
+              )}
+            >
+              {statusText}
+            </div>
+          )}
         </div>
 
         <div className="mt-4 border-t pt-3">
@@ -294,10 +292,12 @@ function Readout({
   label,
   value,
   big,
+  valueClassName,
 }: {
   label: string;
   value: string;
   big?: boolean;
+  valueClassName?: string;
 }) {
   return (
     <div>
@@ -307,7 +307,8 @@ function Readout({
       <div
         className={cn(
           "font-mono tabular-nums leading-none text-foreground",
-          big ? "text-4xl" : "text-xl"
+          big ? "text-4xl" : "text-xl",
+          valueClassName
         )}
       >
         {value}

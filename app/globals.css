@@ -121,7 +121,7 @@ body {
   display: none;
 }
 
-/* popisek u cíle: AZ + MIL */
+/* popisek u cíle: AZ + vzdálenost */
 .leaflet-tooltip.fc-label {
   background: rgba(11, 13, 16, 0.9);
   color: #fff;
@@ -137,4 +137,23 @@ body {
 }
 .leaflet-tooltip.fc-label b {
   color: #fda4af;
+}
+
+/* out of range: celý popisek zčervená */
+.leaflet-tooltip.fc-label--oob {
+  background: rgba(244, 63, 94, 0.9);
+  border-color: #f43f5e;
+  color: #fff;
+}
+.leaflet-tooltip.fc-label--oob::before {
+  border-right-color: #f43f5e;
+}
+.leaflet-tooltip.fc-label--oob b {
+  color: #fff;
+}
+.fc-warn {
+  display: block;
+  margin-top: 1px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
