@@ -5,6 +5,7 @@
  *  - prostý levý klik nedělá nic
  */
 import L from "leaflet";
+import "leaflet-polylinedecorator";
 import { fireSolution } from "./firecontrol";
 import { gameToLatLng, latLngToGame } from "./mapview";
 import type { Point, SceneState, Weapon } from "./types";
@@ -36,6 +37,8 @@ export function createScene(
   let originMarker: L.Marker | null = null;
   let targetMarker: L.Marker | null = null;
   let line: L.Polyline | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let arrows: any = null; // šipky podél čáry zbraň→cíl
   let ringMax: L.Polygon | null = null;
   let ringMin: L.Polygon | null = null;
   let ringLow: L.Polygon | null = null;
@@ -74,6 +77,26 @@ export function createScene(
       html: `<span style="display:block;width:16px;height:16px;border-radius:50%;background:${fill};border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.5)"></span>`,
       iconSize: [16, 16],
       iconAnchor: [8, 8],
+    });
+  }
+
+  // marker cíle = křížek s bílým orámováním
+  function crossIcon() {
+    return L.divIcon({
+      className: "fc-cross",
+      html: `<svg width="26" height="26" viewBox="0 0 26 26" style="display:block;filter:drop-shadow(0 0 1px rgba(0,0,0,.6))">
+        <g stroke="#fff" stroke-width="5" stroke-linecap="round">
+          <line x1="13" y1="3" x2="13" y2="23"/>
+          <line x1="3" y1="13" x2="23" y2="13"/>
+        </g>
+        <g stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round">
+          <line x1="13" y1="3" x2="13" y2="23"/>
+          <line x1="3" y1="13" x2="23" y2="13"/>
+        </g>
+        <circle cx="13" cy="13" r="3" fill="none" stroke="#fff" stroke-width="1.5"/>
+      </svg>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
     });
   }
 
@@ -162,6 +185,7 @@ export function createScene(
     layer.clearLayers();
     originMarker = targetMarker = null;
     line = ringMin = ringMax = ringLow = ringMaxT = null;
+    arrows = null;
 
     if (origin && weapon) {
       ringMax = L.polygon(ringLatLngs(origin, maxU()), {
@@ -201,11 +225,36 @@ export function createScene(
         fill: false,
       }).addTo(layer);
     }
-    if (origin && target)
+    if (origin && target) {
       line = L.polyline(
         [gameToLatLng(origin.x, origin.y), gameToLatLng(target.x, target.y)],
         { color: "#e0a92e", weight: 2, dashArray: "8 8", interactive: false }
       ).addTo(layer);
+      // šipky ve směru palby (zbraň → cíl)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const LL = L as any;
+      arrows = LL.polylineDecorator(line, {
+        patterns: [
+          {
+            offset: 24,
+            repeat: 96,
+            symbol: LL.Symbol.arrowHead({
+              pixelSize: 15,
+              headAngle: 55,
+              polygon: true,
+              pathOptions: {
+                stroke: true,
+                color: "#241800",
+                weight: 1,
+                fillColor: "#ffcf4d",
+                fillOpacity: 1,
+                interactive: false,
+              },
+            }),
+          },
+        ],
+      }).addTo(layer);
+    }
 
     if (origin) {
       originMarker = L.marker(gameToLatLng(origin.x, origin.y), {
@@ -218,7 +267,7 @@ export function createScene(
     if (target) {
       targetMarker = L.marker(gameToLatLng(target.x, target.y), {
         draggable: true,
-        icon: dotIcon("#f43f5e", "fc-target"),
+        icon: crossIcon(),
         zIndexOffset: 1000,
       }).addTo(layer);
       targetMarker.bindTooltip(labelHtml(), {
@@ -267,11 +316,14 @@ export function createScene(
     if (origin && ringMin) ringMin.setLatLngs(ringLatLngs(origin, minU()));
     if (origin && ringLow) ringLow.setLatLngs(ringLatLngs(origin, lowMinU()));
     if (target && ringMaxT) ringMaxT.setLatLngs(ringLatLngs(target, maxU()));
-    if (origin && target && line)
-      line.setLatLngs([
+    if (origin && target && line) {
+      const pts = [
         gameToLatLng(origin.x, origin.y),
         gameToLatLng(target.x, target.y),
-      ]);
+      ];
+      line.setLatLngs(pts);
+      if (arrows) arrows.setPaths([pts]);
+    }
     updateLabel();
     emit();
   }
