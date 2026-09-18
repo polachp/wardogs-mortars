@@ -18,6 +18,13 @@ interface Loaded {
   defaultWeapon: string;
 }
 
+// legenda týmů — barvy shodné se SPAWN_COLORS v lib/mapview.ts (legenda = mapa)
+const TEAMS = [
+  { id: "lonestar", name: "LONESTAR", color: "#f59e0b" },
+  { id: "valkyra", name: "VALKYRA", color: "#38bdf8" },
+  { id: "manticore", name: "MANTICORE", color: "#4ade80" },
+] as const;
+
 type Coords = { wx: string; wy: string; tx: string; ty: string };
 const EMPTY: Coords = { wx: "", wy: "", tx: "", ty: "" };
 const fmtCoord = (n: number | undefined | null) =>
@@ -168,6 +175,28 @@ export function FireControl() {
             >
               {w.name}
             </Button>
+          ))}
+        </div>
+
+        {/* ---- legenda týmů (rychlá nápověda symbolů) ---- */}
+        <div className="pointer-events-auto ml-auto flex items-center gap-3 rounded-lg border bg-card/85 px-3 py-1.5 backdrop-blur">
+          {TEAMS.map((t) => (
+            <div key={t.id} className="flex items-center gap-1.5">
+              <span
+                className="block size-5 shrink-0"
+                style={{
+                  background: t.color,
+                  WebkitMask: `url('/assets/map-markers/${t.id}.webp') center/contain no-repeat`,
+                  mask: `url('/assets/map-markers/${t.id}.webp') center/contain no-repeat`,
+                }}
+              />
+              <span
+                className="text-[11px] font-semibold tracking-wide"
+                style={{ color: t.color }}
+              >
+                {t.name}
+              </span>
+            </div>
           ))}
         </div>
       </div>
