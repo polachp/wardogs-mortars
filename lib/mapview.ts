@@ -21,6 +21,16 @@ export function makeCRS(tb: MapBounds): L.CRS {
     scale: (z: number) => 256 * Math.pow(2, z),
     zoom: (s: number) => Math.log2(s / 256),
     infinite: false,
+    // Vlastní projektované bounds = přesně obdélník tileBounds → tile grid 0..2^z.
+    // Bez toho spadne getProjectedBounds na výchozí LonLat rozsah [-180..180],
+    // což dá nesmyslný globalTileRange a leaflet odmítne platné dlaždice u okraje
+    // (černé pruhy při zoomu). Viz L.CRS.getProjectedBounds.
+    getProjectedBounds(this: L.CRS, zoom: number) {
+      const s = this.scale(zoom);
+      const min = transformation.transform(L.point(tb.minX, tb.minY), s);
+      const max = transformation.transform(L.point(tb.maxX, tb.maxY), s);
+      return L.bounds(min, max);
+    },
   }) as L.CRS;
 }
 
@@ -49,6 +59,7 @@ export function createMap(
     maxZoom: mapCfg.tiles.maxZoom + 2, // overzoom pro detail
     zoomSnap: 0.25,
     wheelPxPerZoomLevel: 90,
+    maxBoundsViscosity: 1.0, // tvrdý clamp — view nesmí utéct mimo mapu do černa
   });
 
   const path = mapCfg.tiles.styles?.[style]?.path ?? mapCfg.tiles.path;
@@ -61,6 +72,10 @@ export function createMap(
       maxZoom: mapCfg.tiles.maxZoom + 2,
       maxNativeZoom: mapCfg.tiles.maxZoom,
       noWrap: true,
+      // fantomové okrajové dlaždice (index 2^z) neexistují → CDN vrací HTML 404,
+      // prohlížeč je ORB-blokuje. Transparentní fallback = žádné černé díry.
+      errorTileUrl:
+        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
       // CDN má hotlink ochranu (Cloudflare, blok cizího Referer). Bez refereru vrací 200.
       // POZN.: pro produkci dlaždice zrcadlit/self-hostovat, ne hotlinkovat.
       referrerPolicy: "no-referrer",
@@ -81,7 +96,7 @@ export function createMap(
     gameToLatLng(tb.maxX, tb.maxY)
   );
   map.fitBounds(full);
-  map.setMaxBounds(full.pad(0.1));
+  map.setMaxBounds(full);
 
   const zones = drawZones(map, mapCfg);
   const markers = addPresetMarkers(map, mapCfg);
