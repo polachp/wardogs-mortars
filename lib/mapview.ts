@@ -90,15 +90,25 @@ export function createMap(
     gameToLatLng(b.minX, b.minY),
     gameToLatLng(b.maxX, b.maxY)
   );
-  // default zoom = fit celé mapy (celý tile extent), ne jen hratelný výřez
+  // pan clamp = celý tile extent (view nesmí utéct do černa)
   const full = L.latLngBounds(
     gameToLatLng(tb.minX, tb.minY),
     gameToLatLng(tb.maxX, tb.maxY)
   );
-  map.fitBounds(full);
   map.setMaxBounds(full);
 
   const zones = drawZones(map, mapCfg);
+
+  // default zoom = fit tří spawn zón (bází), ne celá mapa
+  const mpu = mapCfg.coordinateMetersPerUnit ?? 100;
+  const baseBounds = L.latLngBounds([]);
+  (mapCfg.polygons ?? []).forEach((p) =>
+    p.points?.forEach((pt) =>
+      baseBounds.extend(gameToLatLng(pt.x / mpu, pt.y / mpu))
+    )
+  );
+  map.fitBounds(baseBounds.isValid() ? baseBounds.pad(0.08) : full);
+
   const markers = addPresetMarkers(map, mapCfg);
 
   return { map, layer, markers, zones, playable, crs };
