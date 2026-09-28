@@ -161,8 +161,8 @@ body {
 /* Grayscale styl přes jednosnímkový self-hostovaný raster (viz mapview.createMap).
    Nahrazuje dřívější zvláštní grayscale tile URL. */
 .leaflet-image-layer.map-grayscale {
-  /* "crushed dark" — světlý satelitní raster je vymytý; grayscale + tvrdý
-     kontrast + ztlumený jas → čitelný tmavý taktický podklad, sněhové vrcholy
-     přestanou zářit. Markery/zóny jsou zvláštní vrstva, filtr se jich netýká. */
-  filter: grayscale(1) contrast(1.5) brightness(0.55);
+  /* "crushed dark" úprava je ZAPEČENÁ přímo do webp (sharp grayscale + linear).
+     Runtime CSS filtr na 67 Mpx obrázku přepočítával každý frame zoomu → lag.
+     Bez filtru je zoom čistý GPU transform = plynulý. Viz build skript v gitu. */
+  will-change: transform; /* hint na vlastní GPU vrstvu, neplete se do leaflet inline transform */
 }
