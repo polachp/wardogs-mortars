@@ -161,5 +161,8 @@ body {
 /* Grayscale styl přes jednosnímkový self-hostovaný raster (viz mapview.createMap).
    Nahrazuje dřívější zvláštní grayscale tile URL. */
 .leaflet-image-layer.map-grayscale {
-  filter: grayscale(1);
+  /* "crushed dark" — světlý satelitní raster je vymytý; grayscale + tvrdý
+     kontrast + ztlumený jas → čitelný tmavý taktický podklad, sněhové vrcholy
+     přestanou zářit. Markery/zóny jsou zvláštní vrstva, filtr se jich netýká. */
+  filter: grayscale(1) contrast(1.5) brightness(0.55);
 }
