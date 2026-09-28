@@ -63,8 +63,9 @@ jako základ, schopnosti Sidebaru (ruční X/Y, swap, reset, copy) přenést do
 - Přepínač zbraně (L81 / SPH-2) a mapy (Bakurani / Ozeti / Zestafona) = **tlačítka**
 - Dostřelové prstence: kolem **zbraně** amber (s výplní) + červený min;
   kolem **cíle** teal (lehký) — kam umístit zbraň v dostřelu. Mění se dle zbraně.
-- **Spawny/věže** z map dat: spawny **barevné** (manticore zelená, valkyra modrá,
-  lonestar amber, spawn_board světlý), věže bílé — **neinteraktivní**.
+- **Spawny/věže** z map dat: spawny **barevné** dle oficiálních frakcí
+  (manticore zelená, valkyra červená, lonestar modrofialová, spawn_board
+  světlý), věže bílé — **neinteraktivní**.
 
 ## Architektura
 

@@ -140,9 +140,9 @@ const SHOWN_MARKERS = new Set([
 ]);
 // barvy spawn-frakcí (viz apollyon)
 const SPAWN_COLORS: Record<string, string> = {
-  manticore: "#4ade80", // zelená
-  valkyra: "#38bdf8", // modrá
-  lonestar: "#f59e0b", // amber
+  manticore: "#5bc948", // zelená (Kingdom of Persia)
+  valkyra: "#ef4444", // červená (Soviet People's Republic)
+  lonestar: "#5b6bff", // modrofialová (Western para-military)
   spawn_board: "#e2e8f0", // neutrální světlá
 };
 

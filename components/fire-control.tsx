@@ -20,9 +20,9 @@ interface Loaded {
 
 // legenda týmů — barvy shodné se SPAWN_COLORS v lib/mapview.ts (legenda = mapa)
 const TEAMS = [
-  { id: "lonestar", name: "LONESTAR", color: "#f59e0b" },
-  { id: "valkyra", name: "VALKYRA", color: "#38bdf8" },
-  { id: "manticore", name: "MANTICORE", color: "#4ade80" },
+  { id: "lonestar", name: "LONESTAR", color: "#5b6bff" },
+  { id: "valkyra", name: "VALKYRA", color: "#ef4444" },
+  { id: "manticore", name: "MANTICORE", color: "#5bc948" },
 ] as const;
 
 type Coords = { wx: string; wy: string; tx: string; ty: string };

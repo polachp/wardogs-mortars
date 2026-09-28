@@ -126,7 +126,7 @@
   ],
   "polygons": [
     {
-      "color": "#82c596",
+      "color": "#5bc948",
       "fillOpacity": 0.12,
       "strokeWidth": 2,
       "dashed": true,
@@ -151,7 +151,7 @@
       ]
     },
     {
-      "color": "#d86666",
+      "color": "#ef4444",
       "fillOpacity": 0.12,
       "strokeWidth": 2,
       "dashed": true,
@@ -176,7 +176,7 @@
       ]
     },
     {
-      "color": "#5fa8d3",
+      "color": "#5b6bff",
       "fillOpacity": 0.12,
       "strokeWidth": 2,
       "dashed": true,
