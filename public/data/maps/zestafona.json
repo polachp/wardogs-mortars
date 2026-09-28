@@ -4,12 +4,13 @@
   "w": 32,
   "h": 32,
   "bounds": {
-    "minX": 19.90,
+    "minX": 19.9,
     "maxX": 124.89,
-    "minY": 50.70,
-    "maxY": 141.90
+    "minY": 50.7,
+    "maxY": 141.9
   },
   "tiles": {
+    "image": "/data/maps/zestafona.webp",
     "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/zestafona",
     "tileSize": 256,
     "minZoom": 0,
@@ -37,7 +38,7 @@
     {
       "icon": "tower",
       "x": 6859.9808,
-      "y": 10415.30,
+      "y": 10415.3,
       "label": "Tower 1",
       "minZoom": 0.4,
       "maxZoom": 100
@@ -123,83 +124,83 @@
       "maxZoom": 100
     }
   ],
-    "polygons": [
-      {
-        "color": "#82c596",
-        "fillOpacity": 0.12,
+  "polygons": [
+    {
+      "color": "#82c596",
+      "fillOpacity": 0.12,
       "strokeWidth": 2,
-        "dashed": true,
-        "label": "MANTICORE Spawn",
-        "points": [
-          {
-            "x": 10330.11,
-            "y": 11170.61
-          },
-          {
-            "x": 10190.84,
-            "y": 11631.00
-          },
-          {
-            "x": 10651.23,
-            "y": 11768.62
-          },
-          {
-            "x": 10788.86,
-            "y": 11309.87
-          }
-        ]
-      },
-      {
-        "color": "#d86666",
-        "fillOpacity": 0.12,
-        "strokeWidth": 2,
-        "dashed": true,
-        "label": "VALKYRA Spawn",
-        "points": [
-          {
-            "x": 4027.18,
-            "y": 12188.05
-          },
-          {
-            "x": 3570.07,
-            "y": 12335.51
-          },
-          {
-            "x": 3717.5296,
-            "y": 12792.62
-          },
-          {
-            "x": 4174.64,
-            "y": 12645.17
-          }
-        ]
-      },
-      {
-        "color": "#5fa8d3",
-        "fillOpacity": 0.12,
-        "strokeWidth": 2,
-        "dashed": true,
-        "label": "LONESTAR Spawn",
-        "points": [
-          {
-            "x": 6512.64,
-            "y": 6481.51
-          },
-          {
-            "x": 6630.60,
-            "y": 6946.81
-          },
-          {
-            "x": 7095.91,
-            "y": 6827.21
-          },
-          {
-            "x": 6977.94,
-            "y": 6361.90
-          }
-        ]
-      }
-    ],
+      "dashed": true,
+      "label": "MANTICORE Spawn",
+      "points": [
+        {
+          "x": 10330.11,
+          "y": 11170.61
+        },
+        {
+          "x": 10190.84,
+          "y": 11631
+        },
+        {
+          "x": 10651.23,
+          "y": 11768.62
+        },
+        {
+          "x": 10788.86,
+          "y": 11309.87
+        }
+      ]
+    },
+    {
+      "color": "#d86666",
+      "fillOpacity": 0.12,
+      "strokeWidth": 2,
+      "dashed": true,
+      "label": "VALKYRA Spawn",
+      "points": [
+        {
+          "x": 4027.18,
+          "y": 12188.05
+        },
+        {
+          "x": 3570.07,
+          "y": 12335.51
+        },
+        {
+          "x": 3717.5296,
+          "y": 12792.62
+        },
+        {
+          "x": 4174.64,
+          "y": 12645.17
+        }
+      ]
+    },
+    {
+      "color": "#5fa8d3",
+      "fillOpacity": 0.12,
+      "strokeWidth": 2,
+      "dashed": true,
+      "label": "LONESTAR Spawn",
+      "points": [
+        {
+          "x": 6512.64,
+          "y": 6481.51
+        },
+        {
+          "x": 6630.6,
+          "y": 6946.81
+        },
+        {
+          "x": 7095.91,
+          "y": 6827.21
+        },
+        {
+          "x": 6977.94,
+          "y": 6361.9
+        }
+      ]
+    }
+  ],
   "coordinateMetersPerUnit": 100,
   "tileBounds": {
     "minX": -0.03,

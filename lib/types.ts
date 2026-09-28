@@ -65,13 +65,17 @@ export interface MapConfig {
   tileBounds: MapBounds;
   coordinateMetersPerUnit?: number;
   tiles: {
+    // Self-hostovaný jednosnímkový podklad. Když je vyplněn, použije se
+    // L.imageOverlay místo tile pyramidy (viz mapview.createMap).
+    // Cesta relativní k /public, např. "/data/maps/bakurani.webp".
+    image?: string;
     path: string;
     tileSize: number;
     minZoom: number;
     maxZoom: number;
     extension: string;
     defaultStyle?: string;
-    styles?: Record<string, { path: string }>;
+    styles?: Record<string, { path: string; image?: string }>;
   };
   markers?: MapMarker[];
   polygons?: MapPolygon[];

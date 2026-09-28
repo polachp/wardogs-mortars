@@ -62,29 +62,44 @@ export function createMap(
     maxBoundsViscosity: 1.0, // tvrdý clamp — view nesmí utéct mimo mapu do černa
   });
 
-  const path = mapCfg.tiles.styles?.[style]?.path ?? mapCfg.tiles.path;
-  // WARDOGS tile naming: zoom_{z}/{x}_{y}.webp  (ne standardní XYZ)
-  const layer = L.tileLayer(
-    `${path}/zoom_{z}/{x}_{y}.${mapCfg.tiles.extension}`,
-    {
-      tileSize: mapCfg.tiles.tileSize,
-      minZoom: mapCfg.tiles.minZoom,
-      maxZoom: mapCfg.tiles.maxZoom + 2,
-      maxNativeZoom: mapCfg.tiles.maxZoom,
-      noWrap: true,
-      // fantomové okrajové dlaždice (index 2^z) neexistují → CDN vrací HTML 404,
-      // prohlížeč je ORB-blokuje. Transparentní fallback = žádné černé díry.
-      errorTileUrl:
-        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-      // CDN má hotlink ochranu (Cloudflare, blok cizího Referer). Bez refereru vrací 200.
-      // POZN.: pro produkci dlaždice zrcadlit/self-hostovat, ne hotlinkovat.
-      referrerPolicy: "no-referrer",
-      bounds: L.latLngBounds(
-        gameToLatLng(tb.minX, tb.minY),
-        gameToLatLng(tb.maxX, tb.maxY)
-      ),
-    } as L.TileLayerOptions
-  ).addTo(map);
+  // Rozsah podkladu = přesně obdélník tileBounds (raster i pyramida ho plní).
+  const tileLatLngBounds = L.latLngBounds(
+    gameToLatLng(tb.minX, tb.minY),
+    gameToLatLng(tb.maxX, tb.maxY)
+  );
+
+  // Preferuj self-hostovaný jednosnímkový raster. Cizí tile CDN (apollyon)
+  // je od 2026 za Cloudflare managed challenge → 403 i v prohlížeči a jejich
+  // licence hotlink z forků zakazuje. Viz docs/MAPS.md.
+  const image = mapCfg.tiles.styles?.[style]?.image ?? mapCfg.tiles.image;
+  let layer: L.Layer;
+  if (image) {
+    layer = L.imageOverlay(image, tileLatLngBounds, {
+      // maxNativeZoom není u overlaye — přiblížení jen roztáhne raster.
+      className: style === "grayscale" ? "map-grayscale" : undefined,
+    }).addTo(map);
+  } else {
+    const path = mapCfg.tiles.styles?.[style]?.path ?? mapCfg.tiles.path;
+    // WARDOGS tile naming: zoom_{z}/{x}_{y}.webp  (ne standardní XYZ)
+    layer = L.tileLayer(
+      `${path}/zoom_{z}/{x}_{y}.${mapCfg.tiles.extension}`,
+      {
+        tileSize: mapCfg.tiles.tileSize,
+        minZoom: mapCfg.tiles.minZoom,
+        maxZoom: mapCfg.tiles.maxZoom + 2,
+        maxNativeZoom: mapCfg.tiles.maxZoom,
+        noWrap: true,
+        // fantomové okrajové dlaždice (index 2^z) neexistují → CDN vrací HTML 404,
+        // prohlížeč je ORB-blokuje. Transparentní fallback = žádné černé díry.
+        errorTileUrl:
+          "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        // CDN má hotlink ochranu (Cloudflare, blok cizího Referer). Bez refereru vrací 200.
+        // POZN.: pro produkci dlaždice zrcadlit/self-hostovat, ne hotlinkovat.
+        referrerPolicy: "no-referrer",
+        bounds: tileLatLngBounds,
+      } as L.TileLayerOptions
+    ).addTo(map);
+  }
 
   const playable = L.latLngBounds(
     gameToLatLng(b.minX, b.minY),

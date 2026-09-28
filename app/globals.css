@@ -157,3 +157,9 @@ body {
   font-weight: 700;
   letter-spacing: 0.05em;
 }
+
+/* Grayscale styl přes jednosnímkový self-hostovaný raster (viz mapview.createMap).
+   Nahrazuje dřívější zvláštní grayscale tile URL. */
+.leaflet-image-layer.map-grayscale {
+  filter: grayscale(1);
+}

@@ -10,6 +10,7 @@
     "maxY": 129.65
   },
   "tiles": {
+    "image": "/data/maps/bakurani.webp",
     "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/bakurani",
     "tileSize": 256,
     "minZoom": 0,
@@ -205,7 +206,6 @@
           "x": 4339,
           "y": 7885
         },
-
         {
           "x": 4235,
           "y": 7415

@@ -10,6 +10,7 @@
     "maxY": 99.56
   },
   "tiles": {
+    "image": "/data/maps/ozeti.webp",
     "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/ozeti",
     "tileSize": 256,
     "minZoom": 0,
