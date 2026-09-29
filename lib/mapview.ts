@@ -157,20 +157,25 @@ export function addPresetMarkers(
     .filter((m) => filter.has(m.icon))
     .forEach((m) => {
       const url = `${MARKER_ICONS}/${m.icon}.webp`;
+      const isTower = m.icon === "tower";
       const color = SPAWN_COLORS[m.icon];
-      const icon = color
-        ? L.divIcon({
-            className: "preset-marker",
-            html: `<span style="display:block;width:22px;height:22px;background:${color};-webkit-mask:url('${url}') center/contain no-repeat;mask:url('${url}') center/contain no-repeat;filter:drop-shadow(0 0 1px rgba(0,0,0,.9))"></span>`,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11],
-          })
-        : L.icon({
-            iconUrl: url,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11],
-            className: "preset-marker",
-          });
+      // věž = předpečený obrys+disk ve webp (žádný runtime filter → plynulý zoom)
+      const size = isTower ? 34 : 22;
+      const anchor = size / 2;
+      const icon =
+        color && !isTower
+          ? L.divIcon({
+              className: "preset-marker",
+              html: `<span style="display:block;width:${size}px;height:${size}px;background:${color};-webkit-mask:url('${url}') center/contain no-repeat;mask:url('${url}') center/contain no-repeat;filter:drop-shadow(0 0 1px rgba(0,0,0,.9))"></span>`,
+              iconSize: [size, size],
+              iconAnchor: [anchor, anchor],
+            })
+          : L.icon({
+              iconUrl: url,
+              iconSize: [size, size],
+              iconAnchor: [anchor, anchor],
+              className: "preset-marker",
+            });
       const mk = L.marker(gameToLatLng(m.x / mpu, m.y / mpu), {
         icon,
         interactive: false,
@@ -182,7 +187,7 @@ export function addPresetMarkers(
         mk.bindTooltip(num ? `T${num}` : m.label, {
           permanent: true,
           direction: "top",
-          offset: [0, -8],
+          offset: [0, -11],
           className: "tower-label",
           interactive: false,
         });
