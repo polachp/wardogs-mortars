@@ -7,6 +7,9 @@ import { readFile, writeFile, copyFile, access } from "node:fs/promises";
 
 const MAPS = ["ozeti", "zestafona", "bakurani"];
 const MARGIN = 0.06; // 6 % šířky/výšky hratelné oblasti jako lem kolem
+// Rozsah RAW rastru (*_full.webp) ve world units. Konstanta, ne cfg.tileBounds —
+// ten se po ořezu přepíše, takže by druhý běh mapoval špatně. Viz git 9c2b0e5.
+const FULL_TB = { minX: -0.03, maxX: 163.81, minY: -0.01, maxY: 163.83 };
 
 for (const id of MAPS) {
   const jsonPath = `public/data/maps/${id}.json`;
@@ -14,7 +17,7 @@ for (const id of MAPS) {
   const rawPath = `public/data/maps/${id}_full.webp`; // záloha celého rastru
 
   const cfg = JSON.parse(await readFile(jsonPath, "utf8"));
-  const tb = cfg.tileBounds; // rozsah rastru (world units)
+  const tb = FULL_TB; // rozsah RAW rastru (ne cfg.tileBounds — ten je po ořezu)
   const b = cfg.bounds; // hratelná oblast (world units)
 
   // záloha originálu jednou
@@ -48,8 +51,15 @@ for (const id of MAPS) {
   const cw = right - left;
   const ch = bottom - top;
 
+  // Enhancement F (mix C+E): odšum → mírné CLAHE → sharpen → jemný kontrast.
+  // Zvýrazní baráky/silnice, potlačí stromový šum. Zapečeno do rastru (offline),
+  // runtime nic nestojí. Ladí se v scripts/enhance-proto.mjs.
   await src
     .extract({ left, top, width: cw, height: ch })
+    .median(3)
+    .clahe({ width: 112, height: 112, maxSlope: 3 })
+    .sharpen({ sigma: 1.3, m1: 1.3, m2: 2.4 })
+    .linear(1.1, -10)
     .webp({ quality: 90 })
     .toFile(webPath + ".tmp");
   await copyFile(webPath + ".tmp", webPath);
